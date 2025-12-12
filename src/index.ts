@@ -152,7 +152,16 @@ wss.on("connection", (ws, req) => {
   // optional: quick log
   console.log("WS connected", req.socket.remoteAddress);
 
+  let lastMessage = Date.now();
+  const heartbeat = setInterval(() => {
+    if (Date.now() - lastMessage > 60000) { // 60 seconds timeout
+      console.log("WS timeout, closing", req.socket.remoteAddress);
+      ws.close();
+    }
+  }, 30000); // check every 30 seconds
+
   ws.on("message", (raw) => {
+    lastMessage = Date.now();
     let m: any;
     try {
       m = JSON.parse(raw.toString());
@@ -208,11 +217,15 @@ wss.on("connection", (ws, req) => {
   });
 
   ws.on("close", () => {
+    clearInterval(heartbeat);
     cleanup(ws);
+    console.log("WS disconnected", req.socket.remoteAddress);
   });
 
   ws.on("error", () => {
+    clearInterval(heartbeat);
     cleanup(ws);
+    console.log("WS error", req.socket.remoteAddress);
   });
 });
 
