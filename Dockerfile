@@ -3,8 +3,10 @@ FROM node:20-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json* tsconfig.json ./
 COPY src ./src
+RUN ls -la /app
 RUN npm ci
 RUN npm run build
+RUN ls -la /app/dist
 
 FROM node:20-alpine AS run
 WORKDIR /app
